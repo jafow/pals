@@ -1,0 +1,7 @@
+[package]
+name = "pals"
+version = "0.1.0"
+authors = ["jaredfowler <jared.a.fowler@gmail.com>"]
+
+[dependencies]
+hex = "0.3.2"
