@@ -32,3 +32,45 @@ fn test_xor_err() {
                         "foo");
     assert_eq!(actual, Err(hex::FromHexError::OddLength));
 }
+
+///
+/// create a slice of length L of bytes 
+fn cycle_bytes(bytes: &str, L: u32) -> Vec<u8> {
+    let iter: Vec<_> = bytes.chars();
+    (0..L).zip(&bytes.chars()).map(|b| b.1).collect()
+}
+
+#[test]
+fn test_cycle_bytes() {
+    let expected = b"abcabcabc";
+    let actual = cycle_bytes("abc", 9);
+
+    assert_eq!(actual, expected);
+}
+/// takes a hex string and xors against each char A-Za-z
+/// returning the most likely to be valid English
+/// 
+/// scoring:
+///     - create a table C of chars to frequency in English language
+///     like this:
+///     https://en.wikipedia.org/wiki/Letter_frequency#Relative_frequencies_of_letters_in_the_English_language
+///     - reduce the decoded/xor'd bytes B into their own freq table t
+///     - for idx, b in B:
+///         sum the difference of each key in t to corresponding key in  C
+///
+///     return the key with the lowest sum (lowest == smaller deviation from the "ideal")
+///
+///
+///
+pub fn single_byte(bytes: &str) -> Result<Vec<u8>, ()> {
+    // let l: u32 = bytes.len();
+
+    // for ch in LETTERS {
+    //     let decoded = hex::decode(bytes)?;
+    //     let _key = cycle_bytes(ch, &l);
+
+    //     let cipher = xor_fixed(_key, decoded);
+    //     let score = score_cipher(cipher, ch);
+    // }
+    Ok(vec![1, 2, 3])
+}
