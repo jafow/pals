@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 
-pub fn char_freq() -> HashMap<&'static str, f32> {
+/// character frequency of English language
+/// source: https://en.wikipedia.org/wiki/Letter_frequency
+pub fn char_freq<'a, T>() -> HashMap<&'a str, f32> {
     let freq_table: HashMap<&str, f32> = vec![
         ("a", 0.08167),
         ("b", 0.01492),
