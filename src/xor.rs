@@ -1,4 +1,5 @@
 extern crate hex;
+use table;
 
 /// xor_fixed
 /// take 2 equal length buffers and return the fixed
@@ -33,7 +34,6 @@ fn test_xor_err() {
     assert_eq!(actual, Err(hex::FromHexError::OddLength));
 }
 
-///
 /// create a slice of length slice_len of bytes
 fn cycle_bytes(slice_len: u8, bytes: &str) -> Vec<&u8> {
     let b = bytes.as_bytes();
