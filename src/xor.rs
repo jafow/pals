@@ -34,10 +34,10 @@ fn test_xor_err() {
 }
 
 ///
-/// create a slice of length L of bytes 
-fn cycle_bytes(bytes: &str, L: u32) -> Vec<u8> {
-    let iter: Vec<_> = bytes.chars();
-    (0..L).zip(&bytes.chars()).map(|b| b.1).collect()
+/// create a slice of length slice_len of bytes
+fn cycle_bytes(slice_len: u8, bytes: &str) -> Vec<&u8> {
+    let b = bytes.as_bytes();
+    (0..slice_len).zip(b).map(|b| b.1).collect()
 }
 
 #[test]
@@ -59,8 +59,6 @@ fn test_cycle_bytes() {
 ///         sum the difference of each key in t to corresponding key in  C
 ///
 ///     return the key with the lowest sum (lowest == smaller deviation from the "ideal")
-///
-///
 ///
 pub fn single_byte(bytes: &str) -> Result<Vec<u8>, ()> {
     // let l: u32 = bytes.len();
