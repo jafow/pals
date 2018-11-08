@@ -34,6 +34,6 @@ pub fn char_freq<'a, T>() -> HashMap<u32, f32> {
     freq_table
 }
 
-pub const LETTERS: [u8; 2] = [b'a', b'b', b'c', b'd', b'e', b'f', b'g', b'h',
+pub const LETTERS: [u8; 26] = [b'a', b'b', b'c', b'd', b'e', b'f', b'g', b'h',
     b'i', b'j', b'k', b'l', b'm', b'n', b'o', b'p', b'q', b'r', b's',
     b't', b'u', b'v', b'w', b'x', b'y', b'z'];

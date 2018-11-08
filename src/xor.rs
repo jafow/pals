@@ -37,16 +37,39 @@ fn test_xor_err() {
 /// create a slice of length slice_len of bytes
 fn cycle_bytes(slice_len: u8, bytes: &str) -> Vec<&u8> {
     let b = bytes.as_bytes();
-    (0..slice_len).zip(b).map(|b| b.1).collect()
+    (0..slice_len).zip(b.iter().cycle()).map(|b| b.1).collect()
 }
 
 #[test]
 fn test_cycle_bytes() {
-    let expected = b"abcabcabc";
-    let actual = cycle_bytes("abc", 9);
+    let expected: [&u8; 5] = [&b'a', &b'b', &b'c', &b'a', &b'b'];
+    let actual = cycle_bytes(5, "abc");
 
     assert_eq!(actual, expected);
 }
+
+fn fill_bytes(slice_len: usize, _char: &u8) -> Vec<&u8> {
+    let mut filled: Vec<&u8> = Vec::new();
+
+    for _i in 0..slice_len {
+        filled.push(_char);
+    }
+    filled
+}
+
+#[test]
+fn test_fill_bytes() {
+    let bytes_input = "hello";
+    let expect0 = vec![&b'f', &b'f', &b'f', &b'f', &b'f'];
+    let actual0 = fill_bytes(bytes_input.len(), &b'f');
+
+    let expect1 = vec![&b'a', &b'a', &b'a', &b'a', &b'a'];
+    let actual1 = fill_bytes(5, &b'a');
+
+    assert_eq!(expect0, actual0);
+    assert_eq!(expect1, actual1);
+}
+
 /// takes a hex string and xors against each char A-Za-z
 /// returning the most likely to be valid English
 /// 
@@ -57,18 +80,18 @@ fn test_cycle_bytes() {
 ///     - reduce the decoded/xor'd bytes B into their own freq table t
 ///     - for idx, b in B:
 ///         sum the difference of each key in t to corresponding key in  C
-///
-///     return the key with the lowest sum (lowest == smaller deviation from the "ideal")
-///
-pub fn single_byte(bytes: &str) -> Result<Vec<u8>, ()> {
-    // let l: u32 = bytes.len();
+///     return the key with the lowest sum (where lowest is the smaller deviation from the ideal)
 
-    // for ch in LETTERS {
-    //     let decoded = hex::decode(bytes)?;
-    //     let _key = cycle_bytes(ch, &l);
+pub fn single_byte(bytes: &str) -> Result<Vec<u8>, hex::FromHexError> {
+    debug_assert_ne!(bytes.is_empty(), true);
+    let _len: usize = bytes.len();
 
-    //     let cipher = xor_fixed(_key, decoded);
-    //     let score = score_cipher(cipher, ch);
-    // }
+    for ch in table::LETTERS.iter() {
+        println!("Letter {}", ch);
+        let decoded = hex::decode(bytes)?;
+        let _key = fill_bytes(_len, ch);
+        let cipher = xor_fixed(_key.into_iter().collect(), decoded.into_iter().collect());
+        // let score = score_cipher(cipher, ch);
+    }
     Ok(vec![1, 2, 3])
 }
