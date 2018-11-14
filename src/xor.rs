@@ -1,13 +1,15 @@
 extern crate hex;
 use table;
 
+use std::string::FromUtf8Error;
+
 /// xor_fixed
 /// take 2 equal length buffers and return the fixed
 /// xor of them
-pub fn xor_fixed(buf1: &str, buf2: &str) -> Result<Vec<u8>, hex::FromHexError> {
+pub fn xor_fixed(buf1: &String, buf2: &String) -> Result<Vec<u8>, hex::FromHexError> {
     assert_eq!(buf1.len(), buf2.len());
-    let b1_decoded = hex::decode(buf1)?;
-    let b2_decoded = hex::decode(buf2)?;
+    let b1_decoded = hex::decode(buf1.as_bytes())?;
+    let b2_decoded = hex::decode(buf2.as_bytes())?;
 
     let mut res: Vec<u8> = Vec::new();
 
@@ -21,16 +23,18 @@ pub fn xor_fixed(buf1: &str, buf2: &str) -> Result<Vec<u8>, hex::FromHexError> {
 #[test]
 fn test_xor_fixed() {
     let expected = String::from("746865206b696420646f6e277420706c6179");
-    let actual = xor_fixed("1c0111001f010100061a024b53535009181c",
-                        "686974207468652062756c6c277320657965");
+    let a1 = String::from("1c0111001f010100061a024b53535009181c");
+    let a2 = String::from("686974207468652062756c6c277320657965");
+    let actual = xor_fixed(&a1, &a2);
 
     assert_eq!(hex::encode(actual.unwrap()), expected);
 }
 
 #[test]
 fn test_xor_err() {
-    let actual = xor_fixed("123",
-                        "foo");
+    let mut s1 = String::from("123");
+    let mut s2 = String::from("foo");
+    let actual = xor_fixed(&s1, &s2);
     assert_eq!(actual, Err(hex::FromHexError::OddLength));
 }
 
@@ -48,26 +52,30 @@ fn test_cycle_bytes() {
     assert_eq!(actual, expected);
 }
 
-fn fill_bytes(slice_len: usize, _char: &u8) -> Vec<&u8> {
-    let mut filled: Vec<&u8> = Vec::new();
+fn fill_bytes(slice_len: usize, _char: &u8) -> Result<Vec<u8>, FromUtf8Error> {
+    let mut filled: Vec<u8> = Vec::new();
 
     for _i in 0..slice_len {
-        filled.push(_char);
+        filled.push(*_char);
     }
-    filled
+    Ok(filled)
 }
 
 #[test]
 fn test_fill_bytes() {
     let bytes_input = "hello";
-    let expect0 = vec![&b'f', &b'f', &b'f', &b'f', &b'f'];
+    let expect0 = vec![b'f', b'f', b'f', b'f', b'f'];
     let actual0 = fill_bytes(bytes_input.len(), &b'f');
 
-    let expect1 = vec![&b'a', &b'a', &b'a', &b'a', &b'a'];
+    let expect1 = vec![b'a', b'a', b'a', b'a', b'a'];
     let actual1 = fill_bytes(5, &b'a');
 
-    assert_eq!(expect0, actual0);
-    assert_eq!(expect1, actual1);
+    let expect2 = vec![b'z'];
+    let actual2 = fill_bytes(1, &b'z');
+
+    assert_eq!(expect0, actual0.unwrap());
+    assert_eq!(expect1, actual1.unwrap());
+    assert_eq!(expect2, actual2.unwrap());
 }
 
 /// takes a hex string and xors against each char A-Za-z
@@ -90,7 +98,7 @@ pub fn single_byte(bytes: &str) -> Result<Vec<u8>, hex::FromHexError> {
         println!("Letter {}", ch);
         let decoded = hex::decode(bytes)?;
         let _key = fill_bytes(_len, ch);
-        let cipher = xor_fixed(_key.into_iter().collect(), decoded.into_iter().collect());
+        // let cipher = xor_fixed(_key.into_iter().collect(), decoded.into_iter().collect());
         // let score = score_cipher(cipher, ch);
     }
     Ok(vec![1, 2, 3])
