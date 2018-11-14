@@ -6,3 +6,4 @@ authors = ["jaredfowler <jared.a.fowler@gmail.com>"]
 [dependencies]
 hex = "0.3.2"
 rust-crypto = "0.2.36"
+untrusted = "0.6.2"
