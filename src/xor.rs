@@ -52,13 +52,13 @@ fn test_cycle_bytes() {
     assert_eq!(actual, expected);
 }
 
-fn fill_bytes(slice_len: usize, _char: &u8) -> Result<Vec<u8>, FromUtf8Error> {
+fn fill_bytes(slice_len: usize, _char: &u8) -> Vec<u8> {
     let mut filled: Vec<u8> = Vec::new();
 
     for _i in 0..slice_len {
         filled.push(*_char);
     }
-    Ok(filled)
+    filled
 }
 
 #[test]
@@ -73,9 +73,9 @@ fn test_fill_bytes() {
     let expect2 = vec![b'z'];
     let actual2 = fill_bytes(1, &b'z');
 
-    assert_eq!(expect0, actual0.unwrap());
-    assert_eq!(expect1, actual1.unwrap());
-    assert_eq!(expect2, actual2.unwrap());
+    assert_eq!(expect0, actual0);
+    assert_eq!(expect1, actual1);
+    assert_eq!(expect2, actual2);
 }
 
 /// takes a hex string and xors against each char A-Za-z
@@ -93,12 +93,19 @@ fn test_fill_bytes() {
 pub fn single_byte(bytes: &str) -> Result<Vec<u8>, hex::FromHexError> {
     debug_assert_ne!(bytes.is_empty(), true);
     let _len: usize = bytes.len();
+    let decoded = match hex::decode(bytes) {
+        Ok(d) => String::from_utf8(d),
+        Err(err) => {
+            println!("error {:?} decoding bytes {:?}", err, bytes);
+            FromUtf8Error
+        }
+    };
 
     for ch in table::LETTERS.iter() {
-        println!("Letter {}", ch);
-        let decoded = hex::decode(bytes)?;
         let _key = fill_bytes(_len, ch);
-        // let cipher = xor_fixed(_key.into_iter().collect(), decoded.into_iter().collect());
+        let _key_string = String::from_utf8(_key).expect("need a good string here");
+        let cipher = xor_fixed(&_key_string, &decoded);
+        println!("cipher: {:?}", cipher);
         // let score = score_cipher(cipher, ch);
     }
     Ok(vec![1, 2, 3])
