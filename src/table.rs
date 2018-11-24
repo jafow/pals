@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 /// character frequency of English language
 /// source: https://en.wikipedia.org/wiki/Letter_frequency
-pub fn char_freq<'a, T>() -> HashMap<u32, f32> {
-    let freq_table: HashMap<u32, f32> = vec![
+pub fn char_freq() -> HashMap<u8, f32> {
+    let freq_table: HashMap<u8, f32> = vec![
         (0x41, 0.08167),
         (0x42, 0.01492),
         (0x43, 0.02782),
@@ -29,7 +29,33 @@ pub fn char_freq<'a, T>() -> HashMap<u32, f32> {
         (0x57, 0.02360),
         (0x58, 0.00150),
         (0x59, 0.01974),
-        (0x5a, 0.00074)
+        (0x5a, 0.00074),
+        (0x61, 0.08167),
+        (0x62, 0.01492),
+        (0x63, 0.02782),
+        (0x64, 0.04253),
+        (0x65, 0.12702),
+        (0x66, 0.02228),
+        (0x67, 0.02015),
+        (0x68, 0.06094),
+        (0x69, 0.06966),
+        (0x6a, 0.00153),
+        (0x6b, 0.00772),
+        (0x6c, 0.04025),
+        (0x6d, 0.02406),
+        (0x6e, 0.06749),
+        (0x6f, 0.07507),
+        (0x70, 0.01929),
+        (0x71, 0.00095),
+        (0x72, 0.05987),
+        (0x73, 0.06327),
+        (0x74, 0.09056),
+        (0x75, 0.02758),
+        (0x76, 0.00978),
+        (0x77, 0.02360),
+        (0x78, 0.00150),
+        (0x79, 0.01974),
+        (0x7a, 0.00074)
     ].iter().cloned().collect();
     freq_table
 }
