@@ -2,14 +2,25 @@ extern crate hex;
 use table;
 
 use std::string::FromUtf8Error;
+use std::collections::HashMap;
+
+struct FreqScore {
+    id: u8,
+    score: f32
+}
+
+struct Freq {
+    raw: u8,
+    pct: f32
+}
 
 /// xor_fixed
 /// take 2 equal length buffers and return the fixed
 /// xor of them
-pub fn xor_fixed(buf1: &String, buf2: &String) -> Result<Vec<u8>, hex::FromHexError> {
-    assert_eq!(buf1.len(), buf2.len());
-    let b1_decoded = hex::decode(buf1.as_bytes())?;
-    let b2_decoded = hex::decode(buf2.as_bytes())?;
+pub fn xor_fixed(buf1: &[u8], buf2: &[u8]) -> Result<Vec<u8>, hex::FromHexError> {
+    // assert_eq!(buf1.len(), buf2.len());
+    let b1_decoded = hex::decode(buf1)?;
+    let b2_decoded = hex::decode(buf2)?;
 
     let mut res: Vec<u8> = Vec::new();
 
@@ -23,31 +34,30 @@ pub fn xor_fixed(buf1: &String, buf2: &String) -> Result<Vec<u8>, hex::FromHexEr
 #[test]
 fn test_xor_fixed() {
     let expected = String::from("746865206b696420646f6e277420706c6179");
-    let a1 = String::from("1c0111001f010100061a024b53535009181c");
-    let a2 = String::from("686974207468652062756c6c277320657965");
-    let actual = xor_fixed(&a1, &a2);
+    let a1: &[u8; 36] = b"1c0111001f010100061a024b53535009181c";
+    let a2: &[u8; 36] = b"686974207468652062756c6c277320657965";
+    let actual = xor_fixed(a1, a2);
 
     assert_eq!(hex::encode(actual.unwrap()), expected);
 }
 
 #[test]
 fn test_xor_err() {
-    let mut s1 = String::from("123");
-    let mut s2 = String::from("foo");
-    let actual = xor_fixed(&s1, &s2);
+    let s1 = b"123";
+    let s2 = b"foo";
+    let actual = xor_fixed(s1, s2);
     assert_eq!(actual, Err(hex::FromHexError::OddLength));
 }
 
 /// create a slice of length slice_len of bytes
-fn cycle_bytes(slice_len: u8, bytes: &str) -> Vec<&u8> {
-    let b = bytes.as_bytes();
-    (0..slice_len).zip(b.iter().cycle()).map(|b| b.1).collect()
+fn cycle_bytes(slice_len: u8, bytes: &[u8]) -> Vec<&u8> {
+    (0..slice_len).zip(bytes.iter().cycle()).map(|b| b.1).collect()
 }
 
 #[test]
 fn test_cycle_bytes() {
-    let expected: [&u8; 5] = [&b'a', &b'b', &b'c', &b'a', &b'b'];
-    let actual = cycle_bytes(5, "abc");
+    let expected: [&u8; 5] = [&97, &98, &99, &97, &98];
+    let actual = cycle_bytes(5, b"abc");
 
     assert_eq!(actual, expected);
 }
@@ -90,23 +100,55 @@ fn test_fill_bytes() {
 ///         sum the difference of each key in t to corresponding key in  C
 ///     return the key with the lowest sum (where lowest is the smaller deviation from the ideal)
 
-pub fn single_byte(bytes: &str) -> Result<Vec<u8>, hex::FromHexError> {
+pub fn single_byte(bytes: &str) -> Result<Vec<u8>, FromUtf8Error> {
     debug_assert_ne!(bytes.is_empty(), true);
     let _len: usize = bytes.len();
-    let decoded = match hex::decode(bytes) {
-        Ok(d) => String::from_utf8(d),
-        Err(err) => {
-            println!("error {:?} decoding bytes {:?}", err, bytes);
-            FromUtf8Error
-        }
-    };
+    let decoded = hex::decode(bytes).expect("hex should decode");
 
     for ch in table::LETTERS.iter() {
-        let _key = fill_bytes(_len, ch);
-        let _key_string = String::from_utf8(_key).expect("need a good string here");
-        let cipher = xor_fixed(&_key_string, &decoded);
-        println!("cipher: {:?}", cipher);
-        // let score = score_cipher(cipher, ch);
+        // fill up a single byte buffer
+        let _key = hex::encode_upper(fill_bytes(_len, ch));
+        // xor ciphertext against the _key
+        let cipher = xor_fixed(&_key.into_bytes(), &bytes.as_bytes()).expect("xor fixed");
+        // count freq
+        let cipher_table: HashMap<u8, Freq> = freq_table(&cipher);
+        let score: FreqScore = score_cipher(cipher_table, *ch);
     }
     Ok(vec![1, 2, 3])
+}
+
+#[test]
+fn test_single_byte() {
+    assert_eq!(0, 0);
+}
+
+/// creates a frequency table of chars in a bytearray
+fn freq_table(bytes: &[u8]) -> HashMap<u8, Freq> {
+    let mut table: HashMap<u8, Freq> = HashMap::new();
+    for &c in bytes.iter() {
+        let mut fq = Freq { raw: 1, pct: 0.0 };
+        match table.get(&c) {
+            Some(v) => fq.raw += v.raw,
+            None => fq.raw += 0
+        };
+        fq.pct = (fq.raw / bytes.len() as u8).into();
+        table.insert(c, fq);
+    }
+    table
+}
+
+/// score a ciphertext's freq table against the ETAOINSHRDLU freq table
+fn score_cipher(cipher_table: HashMap<u8, Freq>, key_char: u8) -> FreqScore {
+    let mut freq_score = FreqScore { score: 0.0, id: key_char };
+    let english_letters = table::char_freq();
+    for (c, val) in cipher_table.iter() {
+        let mut r = 0.0;
+        match english_letters.get(c) {
+            Some(dist) => r += (dist - val.pct).abs(),
+            None => continue
+        };
+        freq_score.score += r;
+        println!("score \t{:?} \tID: {:?}", freq_score.score, freq_score.id);
+    }
+    freq_score
 }
