@@ -1,7 +1,6 @@
 extern crate hex;
 use table;
 
-use std::string::FromUtf8Error;
 use std::collections::HashMap;
 
 struct FreqScore {
@@ -13,6 +12,7 @@ struct Freq {
     raw: u8,
     pct: f32
 }
+
 
 /// xor_fixed
 /// take 2 equal length buffers and return the fixed
@@ -92,34 +92,41 @@ fn test_fill_bytes() {
 /// returning the most likely to be valid English
 /// 
 /// scoring:
-///     - create a table C of chars to frequency in English language
+///     - create a table T of chars to frequency in English language
 ///     like this:
 ///     https://en.wikipedia.org/wiki/Letter_frequency#Relative_frequencies_of_letters_in_the_English_language
 ///     - reduce the decoded/xor'd bytes B into their own freq table t
 ///     - for idx, b in B:
-///         sum the difference of each key in t to corresponding key in  C
+///         sum the difference of each key in t to corresponding key in T
 ///     return the key with the lowest sum (where lowest is the smaller deviation from the ideal)
 
-pub fn single_byte(bytes: &str) -> Result<Vec<u8>, FromUtf8Error> {
+pub fn single_byte(bytes: &str) -> u8 {
     debug_assert_ne!(bytes.is_empty(), true);
     let _len: usize = bytes.len();
-    let decoded = hex::decode(bytes).expect("hex should decode");
+    let mut min_score: FreqScore = FreqScore {id: 0, score: 100.0};
 
     for ch in table::LETTERS.iter() {
-        // fill up a single byte buffer
-        let _key = hex::encode_upper(fill_bytes(_len, ch));
-        // xor ciphertext against the _key
+        // fill up a buffer with a byte
+        let _key = hex::encode(fill_bytes(_len, ch));
+        // xor ciphertext against `_key`
         let cipher = xor_fixed(&_key.into_bytes(), &bytes.as_bytes()).expect("xor fixed");
-        // count freq
+
         let cipher_table: HashMap<u8, Freq> = freq_table(&cipher);
+
         let score: FreqScore = score_cipher(cipher_table, *ch);
+        if score.score <= min_score.score {
+            min_score = score;
+        }
     }
-    Ok(vec![1, 2, 3])
+    min_score.id
 }
 
 #[test]
 fn test_single_byte() {
-    assert_eq!(0, 0);
+    let actual = single_byte("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736");
+    let expected = 88;
+
+    assert_eq!(actual, expected);
 }
 
 /// creates a frequency table of chars in a bytearray
@@ -141,14 +148,18 @@ fn freq_table(bytes: &[u8]) -> HashMap<u8, Freq> {
 fn score_cipher(cipher_table: HashMap<u8, Freq>, key_char: u8) -> FreqScore {
     let mut freq_score = FreqScore { score: 0.0, id: key_char };
     let english_letters = table::char_freq();
+
     for (c, val) in cipher_table.iter() {
         let mut r = 0.0;
         match english_letters.get(c) {
+            // Take the difference of the letter's freq/length of word to the
+            // "ideal" frequency in table::freq_table()
             Some(dist) => r += (dist - val.pct).abs(),
-            None => continue
+            // or add 1 for any keys that aren't in the alphabet;
+            // Higher scores indicate lower liklihood of english plaintext.
+            None => r += 1.0
         };
         freq_score.score += r;
-        println!("score \t{:?} \tID: {:?}", freq_score.score, freq_score.id);
     }
     freq_score
 }
