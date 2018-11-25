@@ -2,11 +2,7 @@ extern crate hex;
 use table;
 
 use std::collections::HashMap;
-
-struct FreqScore {
-    id: u8,
-    score: f32
-}
+use FreqScore;
 
 struct Freq {
     raw: u8,
@@ -100,7 +96,7 @@ fn test_fill_bytes() {
 ///         sum the difference of each key in t to corresponding key in T
 ///     return the key with the lowest sum (where lowest is the smaller deviation from the ideal)
 
-pub fn single_byte(bytes: &str) -> u8 {
+pub fn single_byte(bytes: &str) -> FreqScore {
     debug_assert_ne!(bytes.is_empty(), true);
     let _len: usize = bytes.len();
     let mut min_score: FreqScore = FreqScore {id: 0, score: 100.0};
@@ -118,7 +114,7 @@ pub fn single_byte(bytes: &str) -> u8 {
             min_score = score;
         }
     }
-    min_score.id
+    min_score
 }
 
 #[test]
@@ -126,7 +122,7 @@ fn test_single_byte() {
     let actual = single_byte("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736");
     let expected = 88;
 
-    assert_eq!(actual, expected);
+    assert_eq!(actual.id, expected);
 }
 
 /// creates a frequency table of chars in a bytearray

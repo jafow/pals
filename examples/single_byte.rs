@@ -9,8 +9,7 @@ fn main() {
     let dcipher = hex::decode(ciphertext).expect("hex decoded");
 
     let key = pals::xor::single_byte(ciphertext);
-    // let key: u8 = 88;
 
-    let decrypted = dcipher.iter().map(|x| x ^ key).collect();
+    let decrypted = dcipher.iter().map(|x| x ^ key.id).collect();
     println!("Dec: {:?}", String::from_utf8(decrypted));
 }
