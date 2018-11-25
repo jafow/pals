@@ -2,3 +2,6 @@
 **/*.rs.bk
 
 *.idea
+
+# ignore data files
+data/*.txt
