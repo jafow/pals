@@ -28,10 +28,10 @@ fn main() {
     };
 
     for score in scores.iter() {
-        if score.fscore.score <= min_score.fscore.score {
+        if score.fscore.score < min_score.fscore.score {
             min_score.fscore.score = score.fscore.score;
             min_score.fscore.id = score.fscore.id;
-            min_score.line = score.line;
+            min_score.line = score.line.to_string();
         }
     }
 
