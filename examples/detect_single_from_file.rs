@@ -1,4 +1,4 @@
-/// read a file of 60 strings and find the one that has been 
+/// read a file of 60 strings and find the one that has been
 /// XORd with a single byte
 use std::fs::File;
 use std::io::prelude::*;
@@ -18,13 +18,13 @@ fn main() {
         let line_string = l.to_string();
         let score = pals::LineScore {
             fscore: pals::xor::single_byte(l),
-            line: line_string
+            line: line_string,
         };
         scores.push(score);
     }
     let mut min_score = pals::LineScore {
         line: String::from("Nada"),
-        fscore: pals::FreqScore {id: 0, score: 10.0}
+        fscore: pals::FreqScore { id: 0, score: 10.0 },
     };
 
     for score in scores.iter() {
@@ -35,6 +35,9 @@ fn main() {
         }
     }
 
-    println!("Min score: {:?} for char: {:?} on line {:?}", min_score.fscore.score, min_score.fscore.id, min_score.line);
+    println!(
+        "Min score: {:?} for char: {:?} on line {:?}",
+        min_score.fscore.score, min_score.fscore.id, min_score.line
+    );
     assert_eq!(0, 0);
 }
