@@ -2,12 +2,13 @@ extern crate hex;
 use table;
 
 use std::collections::HashMap;
+
 use FreqScore;
 
 #[derive(Debug, PartialEq)]
 pub struct Freq {
     pub raw: u8,
-    pct: f32,
+    pct: i32,
 }
 
 /// xor_fixed
@@ -103,7 +104,7 @@ pub fn single_byte(bytes: &str) -> FreqScore {
     let _len: usize = bytes.len();
     let mut min_score: FreqScore = FreqScore {
         id: 0,
-        score: 100.0,
+        score: i32::max_value(),
     };
 
     for ch in table::LETTERS.iter() {
@@ -115,9 +116,17 @@ pub fn single_byte(bytes: &str) -> FreqScore {
         let cipher_table: HashMap<u8, Freq> = freq_table(&cipher);
 
         let score: FreqScore = score_cipher(cipher_table, *ch);
+
         if score.score < min_score.score {
-            println!("FreqScore min score updated {:?} id: {:?}", score.score, score.id);
-            min_score = score;
+            dbg!(
+                "FreqScore min score updated old: {:?} score: {} with new id: {:?} having score {}",
+                min_score.id,
+                min_score.score,
+                score.id,
+                score.score
+            );
+            min_score.id = score.id;
+            min_score.score = score.score;
         }
     }
     min_score
@@ -127,7 +136,7 @@ pub fn single_byte(bytes: &str) -> FreqScore {
 fn test_single_byte() {
     let actual =
         single_byte("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736");
-    let expected = 88;
+    let expected = 120;
 
     assert_eq!(actual.id, expected);
 }
@@ -136,12 +145,12 @@ fn test_single_byte() {
 fn freq_table(bytes: &[u8]) -> HashMap<u8, Freq> {
     let mut table: HashMap<u8, Freq> = HashMap::new();
     for &c in bytes.iter() {
-        let mut fq = Freq { raw: 1, pct: 0.0 };
+        let mut fq = Freq { raw: 1, pct: 0 };
         match table.get(&c) {
             Some(v) => fq.raw += v.raw,
             None => fq.raw += 0,
         };
-        fq.pct = (fq.raw / bytes.len() as u8).into();
+        fq.pct = (fq.raw / bytes.len() as u8) as i32;
         table.insert(c, fq);
     }
     table
@@ -150,46 +159,26 @@ fn freq_table(bytes: &[u8]) -> HashMap<u8, Freq> {
 /// score a ciphertext's freq table against the ETAOINSHRDLU freq table
 fn score_cipher(cipher_table: HashMap<u8, Freq>, key_char: u8) -> FreqScore {
     let mut freq_score = FreqScore {
-        score: 0.0,
+        score: 0,
         id: key_char,
     };
     let english_letters = table::char_freq();
 
-    // for letter in table::LETTERS.iter() {
-    //     // check if letter in cipher_table
-    //     if let Some(freq) = cipher_table.get(&letter) {
-    //         // get its freq and different from char_freq ideal
-    //         let mut r = 0.0;
-
-    //         match english_letters.get(&letter) {
-    //             Some(dist) => r += (dist - freq.pct).abs(),
-    //             None => r += 1.0,
-    //         }
-    //         freq_score.score += r;
-    //     }
-    // }
     for (c, val) in cipher_table.iter() {
-        let mut r = 0.0;
+        let mut r = 0_i32;
         match english_letters.get(c) {
             // Take the difference of the letter's freq/length of word to the
             // "ideal" frequency in table::freq_table()
-            Some(dist) => r += (dist - val.pct).abs(),
-            // or add 1 for any keys that aren't in the alphabet;
+            // Some(dist) => r += (dist - val.pct).abs(),
+            Some(dist) =>  r += dist - val.pct,
+            // or add 100000 for any keys that aren't in the alphabet;
             // Higher scores indicate lower liklihood of english plaintext.
-            None => r += 1.0,
+            None => r += 100000_i32,
         };
         freq_score.score += r;
     }
 
     freq_score
-}
-
-#[test]
-fn table_test() {
-   let t = table::char_freq();
-
-   // assert_eq!(Some(&0.08167), t.get(&("a".bytes().next().unwrap())));
-   // assert_eq!(Some(&0.08167), t.get("a".as_ptr()));
 }
 
 fn xor_repeating_key(plaintext: &str, key: &str) -> Result<Vec<u8>, ()> {
@@ -211,7 +200,10 @@ fn xor_repeating_key(plaintext: &str, key: &str) -> Result<Vec<u8>, ()> {
 // https://cryptopals.com/sets/1/challenges/5
 #[test]
 fn test_repeating_key() {
-    let b_raw = xor_repeating_key("Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal", "ICE");
+    let b_raw = xor_repeating_key(
+        "Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal",
+        "ICE",
+    );
 
     assert_eq!(
         String::from("0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f"),
@@ -221,7 +213,7 @@ fn test_repeating_key() {
 
 /// Count the number of bits that differ between two sequence of bytes.
 /// stolen from @allancalix at https://github.com/allancalix/badcrypt <3
-pub fn hamming_distance(first: &str, second: &str) -> u32 {
+pub fn hamming_distance(first: &str, second: &str) -> i32 {
     let mut distance = 0;
 
     for (l, r) in first.as_bytes().iter().zip(second.as_bytes()) {
@@ -232,7 +224,7 @@ pub fn hamming_distance(first: &str, second: &str) -> u32 {
         let mut diff = l ^ r;
         dbg!(&diff);
         for _ in 0..8 {
-            distance += (diff & 1) as u32;
+            distance += (diff & 1) as i32;
             diff >>= 1;
         }
     }
@@ -242,6 +234,6 @@ pub fn hamming_distance(first: &str, second: &str) -> u32 {
 
 #[test]
 fn hamming_distance_test() {
-    // assert_eq!(37, hamming_distance("this is a test", "wokka wokka!!!"));
+    assert_eq!(37, hamming_distance("this is a test", "wokka wokka!!!"));
     assert_eq!(1, hamming_distance("b", "c"));
 }

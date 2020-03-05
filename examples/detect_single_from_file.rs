@@ -24,7 +24,10 @@ fn main() {
     }
     let mut min_score = pals::LineScore {
         line: String::from("Nada"),
-        fscore: pals::FreqScore { id: 0, score: 10.0 },
+        fscore: pals::FreqScore {
+            id: 0,
+            score: 10000,
+        },
     };
 
     for score in scores.iter() {
