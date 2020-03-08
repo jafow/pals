@@ -56,7 +56,8 @@ pub fn char_freq() -> HashMap<u8, i32> {
         (0x78, 0150),
         (0x79, 1974),
         (0x7a, 74),
-    ].iter()
+    ]
+    .iter()
     .cloned()
     .collect();
     freq_table

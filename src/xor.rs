@@ -170,7 +170,7 @@ fn score_cipher(cipher_table: HashMap<u8, Freq>, key_char: u8) -> FreqScore {
             // Take the difference of the letter's freq/length of word to the
             // "ideal" frequency in table::freq_table()
             // Some(dist) => r += (dist - val.pct).abs(),
-            Some(dist) =>  r += dist - val.pct,
+            Some(dist) => r += dist - val.pct,
             // or add 100000 for any keys that aren't in the alphabet;
             // Higher scores indicate lower liklihood of english plaintext.
             None => r += 100000_i32,
@@ -181,7 +181,7 @@ fn score_cipher(cipher_table: HashMap<u8, Freq>, key_char: u8) -> FreqScore {
     freq_score
 }
 
-fn xor_repeating_key(plaintext: &str, key: &str) -> Result<Vec<u8>, ()> {
+pub fn xor_repeating_key(plaintext: &str, key: &str) -> Result<Vec<u8>, ()> {
     let b = plaintext.as_bytes();
     let k_iter = key.as_bytes().iter().cycle();
 
@@ -235,7 +235,7 @@ pub fn hamming_distance_from_slice(first: &[u8], second: &[u8]) -> Option<u8> {
     let mut distance = 0_u8;
 
     if first.len() != second.len() {
-        return None
+        return None;
     }
 
     for (l, r) in first.iter().zip(second.iter()) {
@@ -257,8 +257,14 @@ fn hamming_distance_test() {
 
 #[test]
 fn hamming_distance_slice_test() {
-    assert_eq!(hamming_distance_from_slice(&[b'a', b'a'], &[b'a', b'b']), Some(2));
-    assert_eq!(hamming_distance_from_slice(b"this is a test", b"wokka wokka!!!"), Some(37));
+    assert_eq!(
+        hamming_distance_from_slice(&[b'a', b'a'], &[b'a', b'b']),
+        Some(2)
+    );
+    assert_eq!(
+        hamming_distance_from_slice(b"this is a test", b"wokka wokka!!!"),
+        Some(37)
+    );
     assert_eq!(hamming_distance_from_slice(b"b", b"c"), Some(1));
     assert_eq!(hamming_distance_from_slice(b"b", b"cats"), None);
 }

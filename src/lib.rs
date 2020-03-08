@@ -22,7 +22,7 @@ pub struct LineScore {
 #[derive(PartialEq, Debug, Clone)]
 pub struct KeySizeGuess {
     keysize: u8,
-    hamming: u8
+    hamming: u8,
 }
 
 pub mod table;
