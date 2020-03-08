@@ -190,8 +190,8 @@ fn xor_repeating_key(plaintext: &str, key: &str) -> Result<Vec<u8>, ()> {
 
     for pair in zipper {
         let (lhs, rhs) = pair;
-        let _xor: u8 = lhs ^ rhs;
-        res.push(_xor);
+        res.push(lhs ^ rhs);
+        // _xor);
     }
     Ok(res)
 }
@@ -222,7 +222,6 @@ pub fn hamming_distance(first: &str, second: &str) -> i32 {
         // distance.
         // let y = second.get(i).unwrap();
         let mut diff = l ^ r;
-        dbg!(&diff);
         for _ in 0..8 {
             distance += (diff & 1) as i32;
             diff >>= 1;
@@ -232,8 +231,29 @@ pub fn hamming_distance(first: &str, second: &str) -> i32 {
     distance
 }
 
+pub fn hamming_distance_from_slice(first: &[u8], second: &[u8]) -> u8 {
+    let mut distance = 0_u8;
+
+    for (l, r) in first.iter().zip(second.iter()) {
+        let mut diff = l ^ r;
+
+        while diff > 0 {
+            distance += diff & 1;
+            diff >>= 1;
+        }
+    }
+    distance
+}
+
 #[test]
 fn hamming_distance_test() {
     assert_eq!(37, hamming_distance("this is a test", "wokka wokka!!!"));
     assert_eq!(1, hamming_distance("b", "c"));
+}
+
+#[test]
+fn hamming_distance_slice_test() {
+    assert_eq!(hamming_distance_from_slice(&[b'a', b'a'], &[b'a', b'b']), 2);
+    assert_eq!(hamming_distance_from_slice(b"this is a test", b"wokka wokka!!!"),37);
+    assert_eq!(hamming_distance_from_slice(b"b", b"c"), 1);
 }
