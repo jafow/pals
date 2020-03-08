@@ -231,8 +231,12 @@ pub fn hamming_distance(first: &str, second: &str) -> i32 {
     distance
 }
 
-pub fn hamming_distance_from_slice(first: &[u8], second: &[u8]) -> u8 {
+pub fn hamming_distance_from_slice(first: &[u8], second: &[u8]) -> Option<u8> {
     let mut distance = 0_u8;
+
+    if first.len() != second.len() {
+        return None
+    }
 
     for (l, r) in first.iter().zip(second.iter()) {
         let mut diff = l ^ r;
@@ -242,7 +246,7 @@ pub fn hamming_distance_from_slice(first: &[u8], second: &[u8]) -> u8 {
             diff >>= 1;
         }
     }
-    distance
+    Some(distance)
 }
 
 #[test]
@@ -253,7 +257,8 @@ fn hamming_distance_test() {
 
 #[test]
 fn hamming_distance_slice_test() {
-    assert_eq!(hamming_distance_from_slice(&[b'a', b'a'], &[b'a', b'b']), 2);
-    assert_eq!(hamming_distance_from_slice(b"this is a test", b"wokka wokka!!!"),37);
-    assert_eq!(hamming_distance_from_slice(b"b", b"c"), 1);
+    assert_eq!(hamming_distance_from_slice(&[b'a', b'a'], &[b'a', b'b']), Some(2));
+    assert_eq!(hamming_distance_from_slice(b"this is a test", b"wokka wokka!!!"), Some(37));
+    assert_eq!(hamming_distance_from_slice(b"b", b"c"), Some(1));
+    assert_eq!(hamming_distance_from_slice(b"b", b"cats"), None);
 }

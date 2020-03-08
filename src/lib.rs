@@ -20,7 +20,8 @@ pub struct LineScore {
     pub line: String,
 }
 
-struct KeySizeGuess {
+#[derive(PartialEq, Debug, Clone)]
+pub struct KeySizeGuess {
     keysize: u8,
     hamming: u8
 }
@@ -82,56 +83,38 @@ fn chunk_pairs(ciphertext: &[u8], chunksize: u8) -> Vec<Vec<u8>> {
     vec![res]
 }
 
+#[test]
+fn foo_inner() {
+    
+}
 
-
-fn find_key_size(ciphertext: &[u8]) -> Result<Vec<u8>, PalsError> {
+pub fn find_key_size(ciphertext: &[u8]) -> Result<Vec<u8>, PalsError> {
     let mut keysizes: Vec<u8> = vec![];
     
-    // let bytes = ciphertext.iter();
-    // dbg!(&bytes);
-    for size in 2..41 {
-        // let mut sizes: Vec<KeySizeGuess> = vec![];
-        let mut iter = ciphertext.chunks(size as usize);
-        for chunk in iter {
-        // for chunk in ciphertext.chunks(size as usize) {
-            let lhs = chunk;
-            // match chunk.next() {
-            //     Some(rhs) => {
-            //         // count the edit distance between the 2 chunks * by 1000 to avoid 
-            //         // messing with floats. Normalize by size
-            //         let hamm = (xor::hamming_distance_from_slice(lhs, rhs) * 1000) / &size;
-            //         let k: KeySizeGuess = KeySizeGuess { keysize: size, hamming: hamm };
-            //         sizes.push(k);
-            //     },
-            //     None => break
-            // }
+    for size in 2..(ciphertext.len() / 2) {
+        // chunk into slices 2x size and then split them in half before passing to hamming distance
+        let mut distances: Vec<u8> = Vec::new();
+        for chunk in ciphertext.chunks(size * 2 as usize) {
+            if chunk.len() < size {
+                break
+            }
+            let edit_distance = xor::hamming_distance_from_slice(&chunk[0..size], &chunk[size..]);
+            match edit_distance {
+                Some(distance) => distances.push(distance / size as u8),
+                None => break
+            }
         }
-        // average the edit distances
-        // let mean: u8 = sizes.iter().map(|x| x.hamming).sum::<u8>() / sizes.len() as u8;
-        // dbg!(&mean);
-        // let b = iter.next().unwrap();
-        // dbg!(&b);
-        // let hamm: u8 = xor::hamming_distance_from_slice(a, b) / &size;
-        // dbg!(&hamm);
-        // keysizes.push(hamm / &size);
-        // dbg!(&hamming_left);
-
-        // let c = iter.next().expect("get chunk"); 
-        // let d = iter.next().expect("get chunk");  
-        // let hamming_right = xor::hamming_distance_from_slice(c, d) / &size;
-
-        // let p = (hamm + hamming_right) / 2;
-        // dbg!(&p);
-        // keysizes.push(hamm);
+        let avg: u8 = distances.iter().sum::<u8>() / distances.len() as u8;
+        keysizes.push(size as u8);
     }
-    // keysizes.sort_unstable();
-    // Ok(keysizes[0..3].to_vec())
-    Ok(vec![0,1,2])
+    keysizes.sort();
+    Ok(keysizes)
 }
 
 #[test]
 fn find_key_size_test() {
-    // assert_eq!(find_key_size("1a0d131c44191507150d0e411504090f125e4513030f5216101f111b01441a131b1f01194f"), Ok(vec![5]));
+    assert_eq!(find_key_size(b"1a0d131c44191507150d0e411504090f125e4513030f5216101f111b01441a131b1f01194f"), Ok(vec![KeySizeGuess{ hamming: 2, keysize: 5 }]));
+    // assert_eq!(find_key_size(b"1a0d131c44191507150d0e411504090f125"), Ok(vec![KeySizeGuess{ hamming: 2, keysize: 5 }]));
     // assert_eq!(
     //     find_key_size(b"0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f")
     //     , Ok(vec![3, 6, 7])
@@ -141,10 +124,6 @@ fn find_key_size_test() {
     // let b64_decoded = base64::decode(&ciphertext_file).expect("decoded file");
     // println!("b64====== {:?}", b64_decoded);
     // assert_eq!(Ok(vec![5, 29]), find_key_size(&b64_decoded[..]));
-    let x: f64 = 7.0;
-    let xx: f64 = 2.0;
-    let y: f64 = 3.5;
-    assert_eq!(x / xx, y);
     // assert_eq!(
     //     find_key_size(
     //         b"236f222f272131222f206924622427203a282721626e3d2c2c242b3c692a306f2f6e3d242b23213c656526202d3a263762203c6e28652e2e39372c37622e6e3d262926262b3c692a306f2f6e3a242b23213c")
